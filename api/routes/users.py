@@ -21,19 +21,17 @@ class UsersEndpoint(HTTPEndpoint):
 	path = '/users/'
 
 	async def get(self, request):
-		users = User.all(raw=True)
-		rsp = {'users': []}
-		async for user in users:
-			log.debug('user: %s' % user)
-			rsp['users'].append(user)
+		#users = User.all(raw=True)
+		users = [u async for u in User.all(raw=True)]
+		rsp = {'users': users}
 		print('rsp: %s' % rsp)
 		return UJSONResponse(rsp)
 
 	@use_args(new_user)
-	async def post(self, request, user):
+	async def post(self, request, new_user):
 		try:
-			u = User(name=user['name'])
-			u.save()
+			u = User(name=new_user['name'])
+			await u.save()
 		except Exception:
-			print('something horrible happened')
+			log.error('something horrible happened')
 		return UJSONResponse(u.data, status_code=status.CREATED)

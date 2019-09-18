@@ -4,8 +4,8 @@ from rethinkdb import r
 from rethinkdb import errors
 
 import marshmallow
-from marshmallow import fields
-#from marshmallow import Schema
+# from marshmallow import fields
+# from marshmallow import Schema
 from inflection import tableize
 
 from api.db.connection import get_connection
@@ -18,21 +18,15 @@ class ModelBase(type):
 
 		fields_copy = {}
 		new_class._fields = {}
+		dct['id'] = marshmallow.fields.UUID(missing=str(uuid.uuid4()))
 		for key, value in dct.items():
 			if not key.startswith('__'):
 				new_class._fields[key] = value
 				fields_copy[key] = value
 
-		new_class._fields['id'] = marshmallow.fields.UUID(required=True)
 		new_class._table = tableize(clsname)
 		new_class._table_exists = False
 
-		fields_copy['id'] = marshmallow.fields.UUID(required=True)
-		#new_class._schema = type(
-		#	clsname + 'Schema',
-		#	(marshmallow.Schema,),
-		#	fields_copy
-		#)
 		new_class._schema = marshmallow.Schema.from_dict(
 			fields_copy,
 			name=clsname + 'Schema'
@@ -40,15 +34,15 @@ class ModelBase(type):
 		return new_class
 
 
-#@add_metaclass(ModelBase)
+# @add_metaclass(ModelBase)
 class Model(metaclass=ModelBase):
+
 	def __init__(self, saved=False, *args, **kwargs):
 		self.__dict__['_data'] = {}
 		self.__dict__['_saved'] = saved
-		for key, value in kwargs.items():
+		data = self.load(kwargs)
+		for key, value in data.items():
 			setattr(self, key, value)
-		if 'id' not in self._data:
-			setattr(self, 'id', str(uuid.uuid4()))
 
 	def __setattr__(self, key, value):
 		field = self._fields.get(key, None)
@@ -58,7 +52,7 @@ class Model(metaclass=ModelBase):
 		super(Model, self).__setattr__(key, value)
 
 	def validate(self):
-		errors = self._schema().validate(self._data)
+		errors = self._schema().validate(self.dump(self._data))
 		if errors:
 			raise marshmallow.exceptions.ValidationError(errors)
 
@@ -85,7 +79,7 @@ class Model(metaclass=ModelBase):
 			if raw:
 				yield user
 			else:
-				yield cls.load(user)
+				yield cls(saved=True, **user)
 
 	@classmethod
 	async def get(cls, _id, raw=False):
@@ -99,25 +93,29 @@ class Model(metaclass=ModelBase):
 				return result
 			else:
 				print('return cls._schema.load(%s)' % result)
-				return cls.load(result)
+				return cls(saved=True, **result)
 
 	@classmethod
 	def load(cls, data):
-		result = cls._schema().load(data)
-		return cls(**result)
+		return cls._schema().load(data)
+
+	@classmethod
+	def dump(cls, data):
+		return cls._schema().dump(data)
 
 	async def _do_insert(self):
 		connection = get_connection()
 		table = self.get_table()
-		result = await table.insert(self._data, return_changes=True).run(connection)
+		data = self.dump(self._data)
+		result = await table.insert(data, return_changes=True).run(connection)
 		return result
 
 	async def _do_update(self):
 		connection = get_connection()
 		table = self.get_table()
-		_id = self._data['id']
-		result = await table.get(_id).update(
-			self._data, non_atomic=True
+		data = self.dump(self._data)
+		result = await table.get(data['id']).update(
+			data, non_atomic=True
 		).run(connection)
 		return result
 

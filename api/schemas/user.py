@@ -1,4 +1,4 @@
-#import datetime as dt
+import datetime as dt
 
 from marshmallow import Schema
 from marshmallow import fields
@@ -12,7 +12,8 @@ from guid import GUID
 
 class User(Model):
 	name = fields.Str()
-	email = fields.Email()
+	email = fields.Email(default='example@example.com')
+	joined = fields.DateTime(missing=dt.datetime.utcnow())
 
 class UserSchema(Schema):
 	id = fields.Str(missing=str(GUID()))

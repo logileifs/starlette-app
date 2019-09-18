@@ -1,17 +1,30 @@
+import asyncio
+from http import HTTPStatus as status
+
 from starlette.responses import HTMLResponse
 from starlette.testclient import TestClient
 
 import asynctest
-from http import HTTPStatus as status
 
+from api import db
 from api.app import app
+from api.schemas.user import User
 from tests.asserts import *
 
 
-#client = TestClient(app)
+async def create_user():
+	u = User(name='glommi')
+	await u.save()
+	return u
+
+
+def run_async(func):
+	value = asyncio.get_event_loop().run_until_complete(func())
+	return value
 
 
 class MinimalExample(asynctest.TestCase):
+
 	def test_that_true_is_true(self):
 		assert_true(True)
 
@@ -20,14 +33,25 @@ class MinimalExample(asynctest.TestCase):
 			response = client.get('/')
 			assert_equal(response.status_code, 200)
 
+	def test_create_user(self):
+		with TestClient(app) as client:
+			gizur = {
+				'name': 'gizur'
+			}
+			rsp = client.post('/users/', json=gizur)
+			assert_equal(rsp.status_code, status.CREATED)
+			data = rsp.json()
+			assert_equal(data['name'], 'gizur')
+
 	def test_get_user(self):
 		with TestClient(app) as client:
-			rsp = client.get('/user/de949483-4ee4-4b0e-a928-981ece4ced54')
+			user = run_async(create_user)
+			rsp = client.get('/user/%s' % user.id)
 			assert_equal(rsp.status_code, status.OK)
 			data = rsp.json()
 			assert_dict_equal(
 				data,
-				{'id': 'de949483-4ee4-4b0e-a928-981ece4ced54', 'name': 'gizur'}
+				{'id': user.id, 'name': user.name}
 			)
 
 	def test_get_all_users(self):
@@ -36,4 +60,3 @@ class MinimalExample(asynctest.TestCase):
 			assert_equal(rsp.status_code, status.OK)
 			data = rsp.json()
 			assert_true('users' in data)
-			#print('data: %s' % data)

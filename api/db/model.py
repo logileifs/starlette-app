@@ -71,9 +71,10 @@ class Model(metaclass=ModelBase):
 		return self._data
 
 	@classmethod
-	def create_table(self):
+	async def create_table(cls):
 		connection = get_connection()
-		r.table_create(self._table).run(connection)
+		result = await r.table_create(cls._table).run(connection)
+		return result
 
 	@classmethod
 	async def all(cls, raw=False):
@@ -125,7 +126,7 @@ class Model(metaclass=ModelBase):
 		try:
 			result = await self._do_insert()
 		except errors.ReqlOpFailedError:
-			self.create_table()
+			await self.create_table()
 			result = await self._do_insert()
 		return result
 
@@ -134,7 +135,7 @@ class Model(metaclass=ModelBase):
 		try:
 			result = await self._do_update()
 		except errors.ReqlOpFailedError:
-			self.create_table()
+			await self.create_table()
 			result = await self._do_update()
 		return result
 

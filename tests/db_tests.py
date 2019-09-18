@@ -4,6 +4,8 @@
 import asyncio
 import asynctest
 
+from rethinkdb import r
+
 #from app import app
 from tests.asserts import *
 from api import db
@@ -11,13 +13,17 @@ from api import db
 
 #client = TestClient(app)
 
-#r.db_drop('test').run(conn)
-#r.db_create('test').run(conn)
 
 class DBTests(asynctest.TestCase):
 	@classmethod
 	def setUpClass(cls):
-		pass
+		cls.conn = r.connect()
+		r.db_drop('test').run(cls.conn)
+		r.db_create('test').run(cls.conn)
+
+	@classmethod
+	def tearDownClass(cls):
+		cls.conn.close()
 
 	async def setUp(self):
 		self.conn = await db.connect()

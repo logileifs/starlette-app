@@ -5,6 +5,7 @@ from starlette.responses import HTMLResponse
 from starlette.testclient import TestClient
 
 import asynctest
+from async_asgi_testclient import TestClient
 
 from api import db
 from api.app import app
@@ -13,6 +14,7 @@ from tests.asserts import *
 
 
 async def create_user():
+	#await db.connect()
 	u = User(name='glommi')
 	await u.save()
 	return u
@@ -28,25 +30,25 @@ class MinimalExample(asynctest.TestCase):
 	def test_that_true_is_true(self):
 		assert_true(True)
 
-	def test_app(self):
-		with TestClient(app) as client:
-			response = client.get('/')
+	async def test_app(self):
+		async with TestClient(app) as client:
+			response = await client.get('/')
 			assert_equal(response.status_code, 200)
 
-	def test_create_user(self):
-		with TestClient(app) as client:
+	async def test_create_user(self):
+		async with TestClient(app) as client:
 			gizur = {
 				'name': 'gizur'
 			}
-			rsp = client.post('/users/', json=gizur)
+			rsp = await client.post('/users/', json=gizur)
 			assert_equal(rsp.status_code, status.CREATED)
 			data = rsp.json()
 			assert_equal(data['name'], 'gizur')
 
-	def test_get_user(self):
-		with TestClient(app) as client:
-			user = run_async(create_user)
-			rsp = client.get('/user/%s' % user.id)
+	async def test_get_user(self):
+		async with TestClient(app) as client:
+			user = await create_user()
+			rsp = await client.get('/user/%s' % user.id)
 			assert_equal(rsp.status_code, status.OK)
 			data = rsp.json()
 			assert_dict_equal(
@@ -54,9 +56,9 @@ class MinimalExample(asynctest.TestCase):
 				{'id': user.id, 'name': user.name}
 			)
 
-	def test_get_all_users(self):
-		with TestClient(app) as client:
-			rsp = client.get('/users/')
+	async def test_get_all_users(self):
+		async with TestClient(app) as client:
+			rsp = await client.get('/users/')
 			assert_equal(rsp.status_code, status.OK)
 			data = rsp.json()
 			assert_true('users' in data)

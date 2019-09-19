@@ -37,9 +37,7 @@ class MinimalExample(asynctest.TestCase):
 
 	async def test_create_user(self):
 		async with TestClient(app) as client:
-			gizur = {
-				'name': 'gizur'
-			}
+			gizur = {'name': 'gizur'}
 			rsp = await client.post('/users/', json=gizur)
 			assert_equal(rsp.status_code, status.CREATED)
 			data = rsp.json()

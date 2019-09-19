@@ -1,5 +1,3 @@
-import uuid
-
 from rethinkdb import r
 from rethinkdb import errors
 
@@ -73,13 +71,26 @@ class Model(metaclass=ModelBase):
 		if errors:
 			raise marshmallow.exceptions.ValidationError(errors)
 
-	def get_table(self):
-		table = r.table(self._table)
-		return table
-
 	@property
 	def data(self):
 		return self._data
+
+	@property
+	def saved(self):
+		return self._saved
+
+	@classmethod
+	def load(cls, data):
+		return cls._schema().load(data)
+
+	@classmethod
+	def dump(cls, data):
+		return cls._schema().dump(data)
+
+	@classmethod
+	def get_table(cls):
+		table = r.table(cls._table)
+		return table
 
 	@classmethod
 	async def create_table(cls):
@@ -90,7 +101,7 @@ class Model(metaclass=ModelBase):
 	@classmethod
 	async def all(cls, raw=False):
 		connection = get_connection()
-		table = r.table(cls._table)
+		table = cls.get_table()
 		users = await table.run(connection)
 		async for user in users:
 			if raw:
@@ -101,7 +112,7 @@ class Model(metaclass=ModelBase):
 	@classmethod
 	async def get(cls, _id, raw=False):
 		connection = get_connection()
-		table = r.table(cls._table)
+		table = cls.get_table()
 		result = await table.get(_id).run(connection)
 		if raw:
 			return result
@@ -109,16 +120,22 @@ class Model(metaclass=ModelBase):
 			if result is None:
 				return result
 			else:
-				print('return cls._schema.load(%s)' % result)
 				return cls(saved=True, **result)
 
 	@classmethod
-	def load(cls, data):
-		return cls._schema().load(data)
+	async def drop(cls):
+		conn = get_connection()
+		table = cls.get_table()
+		result = await table.delete().run(conn)
+		return result
 
 	@classmethod
-	def dump(cls, data):
-		return cls._schema().dump(data)
+	def watch(cls):
+		#connection = get_connection()
+		#table = cls.get_table()
+		#feed = table.changes().run(connection)
+		#yield from feed
+		raise NotImplemented("this code isn't working yet")
 
 	async def _do_insert(self):
 		connection = get_connection()
@@ -129,13 +146,13 @@ class Model(metaclass=ModelBase):
 		return result
 
 	async def _do_update(self):
-		connection = get_connection()
+		conn = get_connection()
 		data = self.dump(self._data)
 		self.validate(data)
 		table = self.get_table()
 		result = await table.get(data['id']).update(
-			data, non_atomic=True
-		).run(connection)
+			data, return_changes=True
+		).run(conn)
 		return result
 
 	async def insert(self):
@@ -144,6 +161,7 @@ class Model(metaclass=ModelBase):
 		except errors.ReqlOpFailedError:
 			await self.create_table()
 			result = await self._do_insert()
+		self._saved = True
 		return result
 
 	async def update(self):
@@ -153,6 +171,17 @@ class Model(metaclass=ModelBase):
 			await self.create_table()
 			result = await self._do_update()
 		return result
+
+	async def delete(self):
+		conn = get_connection()
+		table = self.get_table()
+		data = self.dump(self._data)
+		try:
+			res = await table.get(data['id']).delete(return_changes=True).run(conn)
+		except errors.ReqlOpFailedError:
+			return res
+		self._saved = False
+		return res
 
 	async def save(self):
 		if self._saved:

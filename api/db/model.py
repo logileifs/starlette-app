@@ -3,12 +3,27 @@ import uuid
 from rethinkdb import r
 from rethinkdb import errors
 
+import guid
 import marshmallow
 # from marshmallow import fields
 # from marshmallow import Schema
 from inflection import tableize
 
 from api.db.connection import get_connection
+
+
+class GUID(marshmallow.fields.Field):
+	"""GUID field that uses a shortened (slug) version of a UUID"""
+
+	def _deserialize(self, value, *args, **kwargs):
+		try:
+			guid.slug_to_uuid(value)
+			return value
+		except Exception:
+			raise marshmallow.ValidationError("Not a valid id")
+
+	def _serialize(self, value, *args, **kwargs):
+		return str(value)
 
 
 class ModelBase(type):
@@ -18,7 +33,7 @@ class ModelBase(type):
 
 		fields_copy = {}
 		new_class._fields = {}
-		dct['id'] = marshmallow.fields.UUID(missing=str(uuid.uuid4()))
+		dct['id'] = GUID(missing=str(guid.GUID().slug))
 		for key, value in dct.items():
 			if not key.startswith('__'):
 				new_class._fields[key] = value
@@ -51,8 +66,10 @@ class Model(metaclass=ModelBase):
 			self.__dict__[key] = value
 		super(Model, self).__setattr__(key, value)
 
-	def validate(self):
-		errors = self._schema().validate(self.dump(self._data))
+	def validate(self, data=None):
+		if data is None:
+			data = self.dump(self._data)
+		errors = self._schema().validate(data)
 		if errors:
 			raise marshmallow.exceptions.ValidationError(errors)
 
@@ -105,22 +122,23 @@ class Model(metaclass=ModelBase):
 
 	async def _do_insert(self):
 		connection = get_connection()
-		table = self.get_table()
 		data = self.dump(self._data)
+		self.validate(data)
+		table = self.get_table()
 		result = await table.insert(data, return_changes=True).run(connection)
 		return result
 
 	async def _do_update(self):
 		connection = get_connection()
-		table = self.get_table()
 		data = self.dump(self._data)
+		self.validate(data)
+		table = self.get_table()
 		result = await table.get(data['id']).update(
 			data, non_atomic=True
 		).run(connection)
 		return result
 
 	async def insert(self):
-		self.validate()
 		try:
 			result = await self._do_insert()
 		except errors.ReqlOpFailedError:
@@ -129,7 +147,6 @@ class Model(metaclass=ModelBase):
 		return result
 
 	async def update(self):
-		self.validate()
 		try:
 			result = await self._do_update()
 		except errors.ReqlOpFailedError:
@@ -138,7 +155,6 @@ class Model(metaclass=ModelBase):
 		return result
 
 	async def save(self):
-		self.validate()
 		if self._saved:
 			result = await self.update()
 		else:

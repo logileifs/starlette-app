@@ -1,0 +1,3 @@
+log_level: 'debug'
+db_host: 'rethink'
+db_name: 'test'

@@ -9,7 +9,7 @@ class ConnectionError(Exception):
 
 
 async def connect(**kwargs):
-	host = kwargs.get('localhost', 'localhost')
+	host = kwargs.get('host', 'localhost')
 	port = kwargs.get('port', 28015)
 	db = kwargs.get('db', 'test')
 	auth_key = kwargs.get('auth_key', None)
@@ -31,11 +31,11 @@ async def connect(**kwargs):
 			ssl=ssl,
 			_handshake_version=handshake_version,
 		)
-	except RqlDriverError:
+	except errors.RqlDriverError:
 		raise ConnectionError('Could not connect to %s:%d/%s' % (host, port, db))
 
 	try:
-		result = r.db_create(db).run(conn)
+		result = await r.db_create(db).run(conn)
 		# we will probably need to return the result to someone interested
 	except errors.ReqlOpFailedError:
 		#print('db already exists')

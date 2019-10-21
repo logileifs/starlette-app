@@ -21,10 +21,9 @@ class UsersEndpoint(HTTPEndpoint):
 	path = '/users/'
 
 	async def get(self, request):
-		#users = User.all(raw=True)
 		users = [u async for u in User.all(raw=True)]
 		rsp = {'users': users}
-		print('rsp: %s' % rsp)
+		log.debug('rsp: %s' % rsp)
 		return UJSONResponse(rsp)
 
 	@use_args(new_user)

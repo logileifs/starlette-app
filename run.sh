@@ -1,0 +1,1 @@
+/bin/bash prestart.sh && /bin/bash start.sh; /bin/bash poststart.sh

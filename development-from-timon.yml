@@ -1,0 +1,30 @@
+version: '2.2'
+
+services:
+  web:
+    command: bash -c "bin/gunicorn_start_dev"
+    volumes:
+      - ./src/timon:/home/timon/timon
+      - ./conf/django/settings.py:/home/timon/timon/vidskiptavinur_example/settings.py
+      - ./conf/bin/gunicorn_start_dev:/home/timon/bin/gunicorn_start_dev
+    stdin_open: true
+    tty: true
+    networks:
+      app_net:
+        ipv4_address: 172.16.238.10
+  nginx:
+    networks:
+      app_net:
+        ipv4_address: 172.16.238.11
+  redis:
+    networks:
+      app_net:
+        ipv4_address: 172.16.238.12
+networks:
+  app_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.238.0/24
+          gateway: 172.16.238.1

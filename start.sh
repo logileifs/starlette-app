@@ -1,0 +1,1 @@
+uvicorn api.app:app --port=8989 --host=0.0.0.0 --reload

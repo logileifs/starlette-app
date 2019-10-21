@@ -2,7 +2,7 @@ from rethinkdb import r
 from rethinkdb import errors
 
 import guid
-import marshmallow
+import marshmallow as ma
 # from marshmallow import fields
 # from marshmallow import Schema
 from inflection import tableize
@@ -10,7 +10,36 @@ from inflection import tableize
 from api.db.connection import get_connection
 
 
-class GUID(marshmallow.fields.Field):
+#class SchemaMeta(ma.schema.SchemaMeta):
+#	"""Metaclass for `ModelSchema`."""
+#	pass
+
+
+#class ModelSchema(with_metaclass(SchemaMeta, ma.Schema)):
+#	pass
+
+
+class ModelSchema(ma.Schema):
+
+	@ma.pre_dump
+	def _pre_dump(self, data, many, **kwargs):
+		print('pre_dump data: %s' % data)
+		pre_processed = {}
+		for key, value in data.items():
+			if isinstance(value, Model):
+				print('pre_dump got Model object: %s' % value)
+				pre_processed[key] = value.id
+			else:
+				pre_processed[key] = value
+		return pre_processed
+		#to_skip = self.opts.model_skip_values
+		#return {
+		#	key: value for key, value in data.items()
+		#	if value not in to_skip
+		#}
+
+
+class GUID(ma.fields.Field):
 	"""GUID field that uses a shortened (slug) version of a UUID"""
 
 	def _deserialize(self, value, *args, **kwargs):
@@ -18,7 +47,7 @@ class GUID(marshmallow.fields.Field):
 			guid.slug_to_uuid(value)
 			return value
 		except Exception:
-			raise marshmallow.ValidationError("Not a valid id")
+			raise ma.ValidationError("Not a valid id")
 
 	def _serialize(self, value, *args, **kwargs):
 		return str(value)
@@ -31,7 +60,7 @@ class ModelBase(type):
 
 		fields_copy = {}
 		new_class._fields = {}
-		dct['id'] = GUID(missing=str(guid.GUID().slug))
+		dct['id'] = GUID(missing=lambda: str(guid.GUID().slug))
 		for key, value in dct.items():
 			if not key.startswith('__'):
 				new_class._fields[key] = value
@@ -40,7 +69,7 @@ class ModelBase(type):
 		new_class._table = tableize(clsname)
 		new_class._table_exists = False
 
-		new_class._schema = marshmallow.Schema.from_dict(
+		new_class._schema = ma.Schema.from_dict(
 			fields_copy,
 			name=clsname + 'Schema'
 		)
@@ -66,10 +95,10 @@ class Model(metaclass=ModelBase):
 
 	def validate(self, data=None):
 		if data is None:
-			data = self.dump(self._data)
+			data = self.dump(self)
 		errors = self._schema().validate(data)
 		if errors:
-			raise marshmallow.exceptions.ValidationError(errors)
+			raise ma.exceptions.ValidationError(errors)
 
 	@property
 	def data(self):
@@ -84,8 +113,9 @@ class Model(metaclass=ModelBase):
 		return cls._schema().load(data)
 
 	@classmethod
-	def dump(cls, data):
-		return cls._schema().dump(data)
+	def dump(cls, obj):
+		#print('dumping obj: %s' % obj)
+		return cls._schema().dump(obj)
 
 	@classmethod
 	def get_table(cls):
@@ -102,7 +132,10 @@ class Model(metaclass=ModelBase):
 	async def all(cls, raw=False):
 		connection = get_connection()
 		table = cls.get_table()
-		users = await table.run(connection)
+		try:
+			users = await table.run(connection)
+		except errors.ReqlOpFailedError as err:
+			yield None
 		async for user in users:
 			if raw:
 				yield user

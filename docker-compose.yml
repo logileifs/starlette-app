@@ -1,11 +1,47 @@
 version: '3.3'
 services:
-  rethink:
-    image: rethinkdb
-    #container_name: postgis_floti
-    ports:
-      - "28015:28015"
-    #environment:
-    #  - POSTGRES_USER=logi
-  starlight:
-    build: ./api
+    redis:
+        image: redis
+        expose:
+            - "6379"
+        ports:
+            - "6379:6379"
+    rethink:
+        #nodes: 1-4
+        image: rethinkdb
+        expose:
+            - "28015"
+        ports:
+            - "28015:28015"
+    #docker run -p 9000:9000 --name minio1 \
+    #    -e "MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE" \
+    #    -e "MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" \
+    #    -v /mnt/data:/data \
+    #    minio/minio server /data
+    #minio:
+    #    image: minio/minio
+    starlight:
+        #nodes: 2-2
+        #build: .
+        image: logileifs/starlight
+        ports:
+            - "8989:8989"
+        environment:
+            - DB_HOST=rethink
+            - REDIS_HOST=redis
+        deploy:
+            mode: replicated
+            replicas: 2
+            #endpoint_mode: dnsrr    # dns round robin
+        #volumes:
+        #    - ./config/dev.yml:/config/dev.yml
+        depends_on:
+            - redis
+            - rethink
+    loglistener:
+        image: logileifs/logconsumer
+        environment:
+            - LL_CHANNELS=logs
+            - LL_HOST=redis
+        depends_on:
+            - redis

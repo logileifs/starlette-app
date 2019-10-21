@@ -16,7 +16,7 @@ class UserEndpoint(HTTPEndpoint):
 
 	async def get(self, request):
 		user_id = request.path_params['id']
-		log.debug('get user with id: %s' % user_id)
+		log.info('get user with id: %s' % user_id)
 		u = await User.get(user_id, raw=True)
-		log.debug('got user: %s' % u)
+		log.info('got user: %s' % u)
 		return UJSONResponse(u)

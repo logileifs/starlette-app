@@ -2,7 +2,7 @@ import asyncio
 from http import HTTPStatus as status
 
 from starlette.responses import HTMLResponse
-from starlette.testclient import TestClient
+#from starlette.testclient import TestClient
 
 import asynctest
 from async_asgi_testclient import TestClient
@@ -14,8 +14,8 @@ from tests.asserts import *
 
 
 async def create_user():
-	#await db.connect()
-	u = User(name='glommi')
+	await db.connect()
+	u = User(name='glommi', email='glommi@glomm.is')
 	await u.save()
 	return u
 
@@ -27,13 +27,13 @@ def run_async(func):
 
 class MinimalExample(asynctest.TestCase):
 
-	def test_that_true_is_true(self):
-		assert_true(True)
-
 	async def test_app(self):
 		async with TestClient(app) as client:
 			response = await client.get('/')
 			assert_equal(response.status_code, 200)
+			request_id = response.headers['X-Request-ID']
+			print('request_id: %s' % request_id)
+			assert_not_none(request_id)
 
 	async def test_create_user(self):
 		async with TestClient(app) as client:
@@ -49,9 +49,8 @@ class MinimalExample(asynctest.TestCase):
 			rsp = await client.get('/user/%s' % user.id)
 			assert_equal(rsp.status_code, status.OK)
 			data = rsp.json()
-			print('data: %s' % data)
 			assert_equal(data['id'], user.id)
-			#assert_equal(data['name'], user.name)
+			assert_equal(data['name'], user.name)
 
 	async def test_get_all_users(self):
 		async with TestClient(app) as client:

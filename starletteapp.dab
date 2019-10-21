@@ -1,0 +1,61 @@
+{
+  "Services": {
+    "loglistener": {
+      "Env": [
+        "LL_HOST=redis", 
+        "LL_CHANNELS=logs"
+      ], 
+      "Image": "logileifs/logconsumer@sha256:a985840ef8bdc11ea43ccda333b3961048d874f853be9bb5a99c40f3475b5cfb", 
+      "Networks": [
+        "default"
+      ]
+    }, 
+    "minio": {
+      "Image": "minio/minio@sha256:59adb5c0fbc30f704a69bdfeb9baaf6cf2a4f1c8f6fb5e9ff011b71a6898d876", 
+      "Networks": [
+        "default"
+      ]
+    }, 
+    "redis": {
+      "Image": "redis@sha256:cb379e1a076fcd3d3f09e10d7b47ca631fb98fb33149ab559fa02c1b11436345", 
+      "Networks": [
+        "default"
+      ], 
+      "Ports": [
+        {
+          "Port": 6379, 
+          "Protocol": "tcp"
+        }
+      ]
+    }, 
+    "rethink": {
+      "Image": "rethinkdb@sha256:7af2b5a808176e9a83c6aae97f5c6e3437cef0d359e62693edda1cff5d364af4", 
+      "Networks": [
+        "default"
+      ], 
+      "Ports": [
+        {
+          "Port": 28015, 
+          "Protocol": "tcp"
+        }
+      ]
+    }, 
+    "starlight": {
+      "Env": [
+        "REDIS_HOST=redis", 
+        "DB_HOST=rethink"
+      ], 
+      "Image": "logileifs/starlight@sha256:714cd346b0120a66b7e478a0c87bc222587c079957f3ef231f1d3acae57ea19e", 
+      "Networks": [
+        "default"
+      ], 
+      "Ports": [
+        {
+          "Port": 8989, 
+          "Protocol": "tcp"
+        }
+      ]
+    }
+  }, 
+  "Version": "0.1"
+}

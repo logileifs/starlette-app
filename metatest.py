@@ -5,6 +5,27 @@ from six import add_metaclass
 from inflection import tableize
 from collections import OrderedDict
 
+class MetaA(type):
+	pass
+
+class MetaB(type):
+	pass
+
+#@add_metaclass(MetaA)
+class BaseA(metaclass=MetaA):
+	pass
+
+#@add_metaclass(MetaB)
+class BaseB(metaclass=MetaB):
+	pass
+
+class MetaAB(MetaA, MetaB):
+	pass
+
+#@add_metaclass(MetaAB)
+class Fixed(BaseA, BaseB, metaclass=MetaAB):
+	pass
+
 class ModelBase(type):
 	def __new__(cls, clsname, bases, dct):
 		super_new = super(ModelBase, cls).__new__

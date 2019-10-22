@@ -1,0 +1,10 @@
+version: '3.3'
+services:
+    starlight:
+        #nodes: 2-2
+        #build: .
+        image: logileifs/starlight
+        deploy:
+            mode: replicated
+            replicas: 2
+            #endpoint_mode: dnsrr    # dns round robin

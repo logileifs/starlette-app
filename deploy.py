@@ -6,7 +6,7 @@ m = machine.Machine()
 client = docker.APIClient()
 client.ping()
 
-do_token = '00c871aac3376cbf40597bace97e5caf060c68e308e8ade8d9632f55e91fd961'
+do_token = '<CHANGE ME>'
 
 args = {
 	'digitalocean-size': '1vcpu-1gb',
@@ -15,7 +15,7 @@ args = {
 	'digitalocean-image': 'docker-18-04'
 }
 
-#['--digitalocean-size=s-1vcpu-1gb', '--digitalocean-access-token=00c871aac3376cbf40597bace97e5caf060c68e308e8ade8d9632f55e91fd961', '--digitalocean-region=lon1', '--digitalocean-image=docker-18-04']
+#['--digitalocean-size=s-1vcpu-1gb', '--digitalocean-access-token=<CHANGE ME>', '--digitalocean-region=lon1', '--digitalocean-image=docker-18-04']
 xargs = ['--' + key + '=' + value for key, value in args.items()]
 print('xargs: %s' % xargs)
 

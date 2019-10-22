@@ -22,17 +22,13 @@ services:
     #    image: minio/minio
     starlight:
         #nodes: 2-2
-        #build: .
-        image: logileifs/starlight
+        build: .
+        #image: logileifs/starlight
         ports:
             - "8989:8989"
         environment:
             - DB_HOST=rethink
             - REDIS_HOST=redis
-        deploy:
-            mode: replicated
-            replicas: 2
-            #endpoint_mode: dnsrr    # dns round robin
         #volumes:
         #    - ./config/dev.yml:/config/dev.yml
         depends_on:

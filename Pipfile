@@ -1,0 +1,27 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+bpython = "*"
+asynctest = "*"
+async-asgi-testclient = "*"
+
+[packages]
+guid = "*"
+uvicorn = "*"
+starlette = "*"
+rethinkdb = "*"
+marshmallow = "*"
+inflection = "*"
+cryptography = "*"
+webargs-starlette = "*"
+redis = "*"
+python-json-logger = "*"
+ujson = "*"
+aiofiles = "*"
+python-multipart = "*"
+
+[requires]
+python_version = "3.6"

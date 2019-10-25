@@ -1,3 +1,7 @@
+setup:
+	pip install pipenv
+	pipenv install --dev
+
 run:
 	uvicorn api.app:app --port=8989 --reload
 

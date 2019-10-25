@@ -1,4 +1,6 @@
+# switch redis out for aioredis
 import redis
+# use ujson for json formatting
 #import ujson
 import logging
 from datetime import datetime

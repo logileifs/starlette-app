@@ -1,17 +1,14 @@
 import asyncio
 from http import HTTPStatus as status
 
-#from starlette.responses import HTMLResponse
-#from starlette.testclient import TestClient
-
 import asynctest
-from async_asgi_testclient import TestClient
 
 from api import db
 from api.app import app
+from api.schemas.user import User
 from api.app import before_startup
 from api.app import before_shutdown
-from api.schemas.user import User
+from tests.testclient import TestClient
 from tests.asserts import *
 
 
@@ -27,20 +24,10 @@ def run_async(func):
 	return value
 
 
-#class TestClient(async_asgi_testclient.TestClient):
-#	def __init__(self, *args, headers=None, **kwargs):
-#		super().__init__(*args, **kwargs)
-#		self.headers = headers
-#
-#	async def open(self, *args, **kwargs):
-#		return await super().open(*args, headers=self.headers, **kwargs)
-
-
 client = TestClient(app)
-#headers = {
-#	'authorization': 'token gAAAAABdsjBsbm_5BRNITObSUYvn2v_F7lz4AuWPIK7L0eWr-5F3pUh0uRa6ExZL0OACgbuKQRJxWm9gOYxmM_jP0PFpnxDWIQ=='
-#}
-#client.headers = {'authorization': 'token mytoken'}
+client.headers = {
+	'authorization': 'token gAAAAABdsjBsbm_5BRNITObSUYvn2v_F7lz4AuWPIK7L0eWr-5F3pUh0uRa6ExZL0OACgbuKQRJxWm9gOYxmM_jP0PFpnxDWIQ=='
+}
 
 
 class MinimalExample(asynctest.TestCase):

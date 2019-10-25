@@ -1,6 +1,6 @@
-docker-machine create --driver digitalocean --digitalocean-size s-1vcpu-1gb --digitalocean-region lon1 --digitalocean-image ubuntu-18-04-x64 --digitalocean-access-token 00c871aac3376cbf40597bace97e5caf060c68e308e8ade8d9632f55e91fd961 node1
-docker-machine create --driver digitalocean --digitalocean-size s-1vcpu-1gb --digitalocean-region lon1 --digitalocean-image ubuntu-18-04-x64 --digitalocean-access-token 00c871aac3376cbf40597bace97e5caf060c68e308e8ade8d9632f55e91fd961 node2
-docker-machine create --driver digitalocean --digitalocean-size s-1vcpu-1gb --digitalocean-region lon1 --digitalocean-image ubuntu-18-04-x64 --digitalocean-access-token 00c871aac3376cbf40597bace97e5caf060c68e308e8ade8d9632f55e91fd961 node3
+docker-machine create --driver digitalocean --digitalocean-size s-1vcpu-1gb --digitalocean-region lon1 --digitalocean-image ubuntu-18-04-x64 --digitalocean-access-token '<CHANGE ME>' node1
+docker-machine create --driver digitalocean --digitalocean-size s-1vcpu-1gb --digitalocean-region lon1 --digitalocean-image ubuntu-18-04-x64 --digitalocean-access-token '<CHANGE ME>' node2
+docker-machine create --driver digitalocean --digitalocean-size s-1vcpu-1gb --digitalocean-region lon1 --digitalocean-image ubuntu-18-04-x64 --digitalocean-access-token '<CHANGE ME>' node3
 
 docker-machine ssh node1 'ufw allow 22/tcp'
 docker-machine ssh node1 'ufw allow 2376/tcp'

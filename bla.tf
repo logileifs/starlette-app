@@ -1,6 +1,6 @@
 # Set the variable value in *.tfvars file
 # or using -var="do_token=..." CLI option
-variable "do_token" { default = "00c871aac3376cbf40597bace97e5caf060c68e308e8ade8d9632f55e91fd961" }
+variable "do_token" { default = "<CHANGE ME>" }
 
 # Configure the DigitalOcean Provider
 provider "digitalocean" {

@@ -7,6 +7,8 @@ verify_ssl = true
 bpython = "*"
 asynctest = "*"
 async-asgi-testclient = "*"
+aioconsole = "*"
+coverage = "*"
 
 [packages]
 guid = "*"

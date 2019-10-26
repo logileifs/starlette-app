@@ -14,6 +14,9 @@ down:
 test:
 	python -m unittest discover -v -s tests -p "*test*.py"
 
+coverage:
+	coverage run -a --include=api/* -m unittest discover tests/ -p "*test*.py" && coverage report
+
 db-up:
 	docker-compose up -d --force-recreate rethink
 
